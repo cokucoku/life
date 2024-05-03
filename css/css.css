@@ -1,0 +1,669 @@
+* {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    box-sizing: border-box;
+}
+
+[v-cloak] {
+    display: none;
+}
+
+body {
+    background: radial-gradient(#fff, #ddd);
+    overflow: hidden;
+}
+
+
+.loading {
+    position: fixed;
+    left: 50%;
+    top: 20%;
+}
+
+.photos {
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    overflow: hidden;
+}
+
+.photos .bg {
+    position: absolute;
+    height: 100vh;
+    width: 100vw;
+    left: 0;
+    top: 0;
+    transition: all 1.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.photos .bg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.timeLine {
+    width: 12vw;
+    height: 100vh;
+    position: relative;
+    background: rgba(0, 0, 0, .3);
+}
+
+.timeLine .line {
+    position: absolute;
+    height: 100%;
+    width: 1px;
+    background: #fff;
+    right: 0;
+}
+
+.timeLine .yearList {
+    position: relative;
+    z-index: 2;
+}
+
+.timeLine .yearList ul {
+    padding-top: 15px;
+}
+
+.timeLine .yearList ul li {
+    color: #fff;
+    justify-content: flex-end;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 10px 0;
+    position: relative;
+    transition: all .3s;
+    transform-origin: right center;
+}
+
+.timeLine .yearList ul li:after {
+    content: '';
+    width: 10px;
+    height: 10px;
+    border-radius: 100%;
+    background: #fff;
+    margin: 0 -4px 0 20px;
+    position: relative;
+    z-index: 2;
+}
+
+.timeLine .yearList ul li:before {
+    content: '';
+    width: 15px;
+    height: 1px;
+    background: #fff;
+    position: absolute;
+    right: 0;
+}
+
+.timeLine .yearList ul li.cur {
+    color: #f60;
+    transform: scale(1.4);
+}
+
+.timeLine .yearList ul li.cur:after {
+    background: #f60;
+    width: 12px;
+    height: 12px;
+    margin: 0 -5px 0 20px;
+}
+
+.timeLine .yearList ul li.cur:before {
+    background: #f60;
+}
+
+.album {
+    width: 75vw;
+    padding: 0 13% 0 0;
+    position: relative;
+
+}
+
+.album ul {
+    width: 104%;
+    display: flex;
+    flex-wrap: wrap;
+    transform-style: preserve-3d;
+    perspective: 800px;
+}
+
+.pic {
+    width: 20%;
+    padding: 0 4% 4% 0;
+}
+
+.pic .jiao {
+    position: absolute;
+    background: #f60;
+    width: 50%;
+    height: 24px;
+    line-height: 24px;
+    top: 0;
+    color: #fff;
+    font-size: 12px;
+    text-align: center;
+    transform: rotate(-45deg) translate(-30%, -70%);
+}
+
+.pic .mark {
+    position: absolute;
+    background: rgba(0, 0, 0, .6);
+    width: 100%;
+    height: 100%;
+    top: 0;
+    opacity: 0;
+}
+
+.pic .picl {
+    width: 100%;
+    padding-bottom: 66.66%;
+    height: 0;
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+    box-shadow: 0 0 12px rgba(0, 0, 0, .6);
+}
+
+.pic .title {
+    text-align: center;
+    color: #fff;
+    font-size: 26px;
+    position: relative;
+    z-index: 2;
+    opacity: 0;
+}
+
+.pic .time {
+    text-align: center;
+    color: #fff;
+    font-size: 16px;
+    position: relative;
+    z-index: 2;
+    padding-top: 20%;
+    opacity: 0;
+}
+
+
+.pic img, .pic video {
+    position: absolute;
+    object-fit: cover;
+    width: 100%;
+    height: 100%;
+    background: #fff;
+    padding: 10px;
+}
+
+.pager {
+    color: #000;
+    display: flex;
+    justify-content: center;
+}
+
+.pager span {
+    background: #fff;
+    cursor: pointer;
+    padding: 0 8px;
+    margin: 0 2px;
+}
+
+.pager span.cur {
+    background: #f60;
+    color: #fff;
+}
+
+.lee-slide-image {
+    position: fixed;
+    z-index: 3;
+}
+
+.lee-slide-image .float-slide {
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    transition: all .3s;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.lee-slide-image .float-slide .slidecontainer {
+    cursor: move;
+    width: 100vw;
+    height: 88vh;
+    display: flex;
+    align-items: center;
+}
+
+.lee-slide-image .float-slide .thumbpic {
+    width: 740px;
+    height: 8vh;
+    margin: 10px 0;
+    overflow: hidden;
+}
+
+.lee-slide-image .float-slide .thumbpic ul {
+    display: flex;
+    align-items: center;
+}
+
+.lee-slide-image .float-slide .thumbpic ul li {
+    width: calc(8vh * 1.5);
+    height: 8vh;
+    flex-shrink: 0;
+    cursor: pointer;
+    margin-right: 5px;
+    background: #222;
+
+}
+
+.lee-slide-image .float-slide .thumbpic ul li img, .lee-slide-image .float-slide .thumbpic ul li video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: .2;
+    border: solid 2px transparent;
+    transition: all .3s;
+}
+
+.lee-slide-image .float-slide .thumbpic ul li.cur img, .lee-slide-image .float-slide .thumbpic ul li.cur video {
+    opacity: 1;
+    border: solid 2px #f60;
+}
+
+.lee-slide-image .float-slide .slide {
+    width: 100%;
+    height: 90%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lee-slide-image .float-slide .slide img, .lee-slide-image .float-slide .slide video {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain
+}
+
+
+.lee-slide-image .mark {
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    z-index: 999;
+    background: rgba(0, 0, 0, .9);
+    left: 0;
+    top: 0;
+    transition: all .3s;
+}
+
+.lee-slide-image .page {
+    position: fixed;
+    bottom: 10PX;
+    left: 10px;
+    z-index: 1006;
+    color: #fff;
+    padding: 0;
+    font-size: 30px;
+}
+
+.lee-slide-image .page span {
+    color: #f60;
+}
+
+.lee-slide-image .close {
+    width: 40px;
+    height: 40px;
+    position: fixed;
+    right: 10PX;
+    top: 10px;
+    cursor: pointer;
+    z-index: 1006;
+    transform: rotate(45deg);
+}
+
+.lee-slide-image .close:before {
+    content: '';
+    height: 100%;
+    width: 2px;
+    margin-left: -1px;
+    left: 50%;
+    background: #fff;
+    position: absolute;
+}
+
+.lee-slide-image .close:after {
+    content: '';
+    width: 100%;
+    height: 2px;
+    top: 50%;
+    margin-top: -1px;
+    background: #fff;
+    position: absolute;
+}
+
+.qieBg {
+    position: fixed;
+    bottom: 15px;
+    right: 15px;
+    background: rgba(0, 0, 0, .3);
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 100%;
+    cursor: pointer;
+    transition: all .3s;
+}
+
+.qieBg .iconfont {
+    color: #fff;
+    font-size: 14px;
+}
+
+.qieBg .tip {
+    width: 60px;
+    position: absolute;
+    height: 20px;
+    line-height: 20px;
+    text-align: center;
+    background: #fff;
+    border-radius: 12px;
+    font-size: 12px;
+    right: 36px;
+    transition: all .3s;
+    opacity: 0;
+}
+
+.qieBg:hover {
+    background: rgba(255, 102, 0, .6)
+}
+
+.qieBg:hover .tip {
+    opacity: 1;
+}
+
+.musicTool {
+    background: rgba(0, 0, 0, 0.3);
+    position: fixed;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: fit-content;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 25px;
+    border-radius: 25px;
+}
+
+.music {
+    display: flex;
+    align-items: center;
+    color: #eee;
+}
+
+.iconfont {
+    font-size: 22px;
+    transition: all .2s
+}
+
+.music .iconfont {
+    margin-right: 30px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.music .iconfont:hover {
+    color: #3eaf7c
+}
+
+.music .musicinfo {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    width: 300px;
+}
+
+.music .musicinfo .info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    line-height: 14px;
+    height: 14px;
+    margin-bottom: 12px;
+}
+
+.music .musicinfo .info .musictime {
+    flex-shrink: 0;
+}
+
+.music .musicinfo .info .nameauthor {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis
+}
+
+.music .musicinfo .musictime em {
+    font-style: normal;
+}
+
+.music .disabled {
+    pointer-events: none;
+}
+
+/*遮罩動畫*/
+
+.fade-enter,
+.fade-leave-to {
+    opacity: 0;
+}
+
+.fade-enter-to,
+.fade-leave {
+    opacity: 1;
+}
+
+.slide-enter,
+.slide-leave-to {
+    opacity: 0;
+    transform: scale(8.5);
+}
+
+.slide-enter-to,
+.slide-leave {
+    opacity: 1;
+    transform: scale(1);
+}
+
+@media (max-width: 1200px) {
+    .pic {
+        width: 25%;
+    }
+}
+
+@media (max-width: 991px) {
+    .pic {
+        width: 33.33%;
+    }
+
+}
+
+@media screen and (max-width: 768px) {
+    .timeLine .yearList ul li.cur {
+        font-size: 14px;
+        transform: scale(1);
+    }
+
+    .qieBg {
+        bottom: 45px;
+    }
+
+    .lee-slide-image .float-slide .thumbpic {
+        width: calc(100% - 20px);
+        padding: 0 10px;
+        overflow: hidden;
+    }
+
+    .lee-slide-image .float-slide .slidecontainer {
+        height: 80vh;
+    }
+
+    .pic {
+        width: 50%;
+        padding: 0 10% 10% 0;
+    }
+
+    .album {
+        width: 80%;
+    }
+
+    .pic img, .pic img {
+        padding: 5px;
+    }
+
+    .album ul {
+        width: 110%;
+    }
+
+    .lee-slide-image .close {
+        width: 20px;
+        height: 20px;
+    }
+
+    .lee-slide-image .page {
+        font-size: 20px;
+    }
+
+    .timeLine {
+        width: 100vw;
+        height: auto;
+        position: relative;
+        background: none;
+    }
+
+    .photos {
+        flex-direction: column;
+    }
+
+    .timeLine .yearList {
+        padding-right: 0;
+        padding-top: 20px;
+    }
+
+    .timeLine .yearList ul {
+        padding-top: 0;
+        width: 100%;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    .timeLine .yearList ul::-webkit-scrollbar {
+        height: 0px;
+    }
+
+    .timeLine .yearList ul li {
+        font-size: 14px;
+        position: relative;
+        width: 20%;
+        justify-content: center;
+        padding: 30px 0 0;
+        display: inline-block;
+        text-align: center;
+    }
+
+    .timeLine .yearList ul li.cur {
+        font-size: 14px;
+    }
+
+    .timeLine .yearList ul li:after {
+        position: absolute;
+        left: 50%;
+        top: 2px;
+        margin: 0 0 0 -5px;
+    }
+
+    .timeLine .yearList ul li.cur:after {
+        margin: 0 0 0 -6px;
+    }
+
+    .timeLine .yearList ul li:before {
+        left: 50%;
+        height: 12px;
+        width: 1px;
+        top: 12px;
+    }
+
+    .pager span {
+        font-size: 12px;
+        padding: 0 4px;
+    }
+
+    .album {
+        padding: 0;
+    }
+
+    .timeLine .line {
+        position: absolute;
+        height: 2px;
+        width: 100%;
+        right: 0;
+        top: 27px;
+    }
+
+    .musicTool {
+        position: relative;
+        width: 100%;
+        height: 30px;
+        padding: 0;
+        bottom: 0;
+        border-radius: 0;
+    }
+
+    .music {
+        width: 96%;
+    }
+
+    .iconfont {
+        font-size: 12px;
+    }
+
+    .music .iconfont {
+        margin-right: 12px;
+    }
+
+    .music .musicinfo {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        width: inherit;
+
+    }
+
+    .music .musicinfo .info {
+        /*display: none*/
+        width: 80%;
+        margin-bottom: 0;
+        font-size: 12px;
+        height: 12px;
+        line-height: 12px;
+    }
+
+    .music .musicinfo .jd {
+        width: 20%;
+        padding-left: 12px;
+    }
+
+}

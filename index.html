@@ -1,0 +1,719 @@
+<!doctype html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>照片墙</title>
+  <link rel="stylesheet" href="https://at.alicdn.com/t/font_1468805_yjhhrsdhdmn.css">
+  <link rel="stylesheet" type="text/css" href="css/css.css">
+  <link rel="stylesheet" type="text/css" href="css/slider.css">
+</head>
+<body>
+<!--<audio src="4.m4a" autoplay loop="loop" style="display: none;"></audio>-->
+<div class="photos">
+  <transition name="slide">
+    <div class="bg" v-if="bgload"><img :src="bg"></div>
+  </transition>
+  <div class="timeLine">
+    <div class="line"></div>
+    <div class="yearList">
+      <ul>
+        <li @click="curyearlist('recommend')" :class="{cur:curyear==='recommend'}">推荐</li>
+        <li @click="curyearlist(item)" :class="{cur:item===curyear}" v-for="item in years">{{item}}</li>
+      </ul>
+    </div>
+  </div>
+  <div class="album">
+    <ul>
+      <li class="pic" v-for="(item,xh) in album" :key="xh">
+        <div class="picl" @mouseenter="me" @mouseleave="ml" @click="tanWin(item.id)">
+          <img :src="item.tpic">
+          <div class="jiao" v-if="item.tj==='1'" v-cloak>推荐</div>
+          <div class="time">{{item.mtime}}</div>
+          <div class="title">{{item.title}}</div>
+          <div class="mark"></div>
+        </div>
+      </li>
+    </ul>
+    <div class="pager">
+      <span @click="page=xh+1" v-for="(item,xh) in totalPage" :class="{cur:page===xh+1}" :key="xh">{{item}}</span>
+    </div>
+  </div>
+  <div class="lee-slide-image">
+    <transition name="fade">
+      <div class="float-slide" v-cloak v-if="show">
+        <div class="slidecontainer" @mousedown.prevent="mousedown" @mousemove.prevent="mousemove"
+             @mouseup.stop="mouseup" @mouseleave="mouseleave" @touchstart.prevent="touchstart"
+             @touchmove.prevent="touchmove"
+             @touchend.stop="touchend"
+             :style="{transition:isdown?'all .0s':'all .2s ease-in-out',transform:'translateX('+(movex+posx)+'px)'}">
+          <div class="slide" v-for="(item,xh) in config" :key="xh">
+            <video :src="item" v-if="item.indexOf('mp3')>-1" autoPlay loop></video>
+            <img :src="item" v-else>
+          </div>
+        </div>
+        <div class="thumbpic">
+          <ul @mousedown.stop.prevent="mousedown1" @mousemove.stop.prevent="mousemove1"
+              @mouseup="mouseup1" @mouseleave="mouseleave1" @touchstart.stop.prevent="touchstart1"
+              @touchmove.stop.prevent="touchmove1"
+              @touchend="touchend1"
+              :style="{transition:isdown1?'all .0s':'all .2s ease-in-out',transform:'translateX('+(movex1+posx1)+'px)'}">
+            <li :class="{cur:curpage===xh+1}" v-for="(item,xh) in config" :key="xh" @click="curpage=xh+1"
+                @touchend="curpage=xh+1">
+              <video :src="item" v-if="item.indexOf('mp3')>-1"></video>
+              <img :src="item" v-else>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </transition>
+    <div class="close" @click="gb" v-cloak v-if="show"></div>
+    <div class="page" v-cloak v-if="show"><span>{{curpage}}</span>/{{config.length}} <span>{{albumName}}</span></div>
+    <transition name="fade">
+      <div class="mark" v-cloak v-if="show"></div>
+    </transition>
+  </div>
+  <div class="qieBg" @click="qiebg">
+    <div class="tip">背景切换</div>
+    <div class="iconfont iconkuozhanshuxing"></div>
+  </div>
+  <div class="musicTool">
+    <div class="music">
+      <div class="iconfont iconziyuan1" @click="prev"></div>
+      <div class="iconfont iconbofang" :class="{disabled:!canplay}" v-if="!play" @click="playmucis"></div>
+      <div class="iconfont iconstop" v-if="play" @click="pausemucis"></div>
+      <div class="iconfont iconziyuan" @click="next"></div>
+      <div class="musicinfo">
+        <audio id="mymusic" autoplay></audio>
+        <div class="info">
+          <div class="nameauthor" v-if="music[xh]">{{music[xh].name}} - {{music[xh].author}}</div>
+          <div class="musictime"><em>{{curtime | ge}}</em> / <em>{{total | ge}}</em></div>
+        </div>
+        <div id="jd" class="jd"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="js/vue.js"></script>
+<script src="js/TweenMax.min.js"></script>
+<script src="js/axios.min.js"></script>
+<script src="js/music_like.js"></script>
+<script src="js/slider.js"></script>
+<script src="https://cdn.bootcss.com/qs/6.7.0/qs.min.js"></script>
+<script>
+new Vue({
+    el: '.photos',
+    data: {
+        bgload: false,
+        albumAll: [],
+        bg: '',
+        album: [],
+        sw: 0,//窗口宽度
+        column: 6,//列
+        row: 3,//行
+        page: 1,
+        totalPage: 0,
+        show: false,//图片浏览是否显示
+        albumName: '',
+        config: [],//pics
+        posx: 0,
+        movex: 0,
+        isdown: false,
+        oldx: 0,
+        curpage: 1,//滑动到第几张
+        years: [],
+        curyear: 'recommend',
+        posx1: 0,
+        movex1: 0,
+        isdown1: false,
+        oldx1: 0,
+        mymusic: document.getElementById('mymusic'),
+        music: music, //存放播放列表
+        play: false,
+        xh: 0, //播放的音乐的序号
+        curtime: 0, //播放當前時間
+        total: 0, //音樂總長度
+        temcurtime: 0, //暫停播放後臨時保存，
+        setinter: '', //保存定時器名稱
+        si1: '',
+        first: true,//这个用来标记是不是第一次页面加载，这样来判断音乐是不是可
+        canplay: false
+
+    },
+    filters: {
+        ge: function (value) {
+            var fen = Math.floor(value / 60)
+            var yu = Math.floor(value % 60)
+            if (fen < 10) {
+                fen = '0' + fen
+            } else {
+                fen = fen
+            }
+            if (yu < 10) {
+                yu = '0' + yu
+            } else {
+                yu = yu
+            }
+            return fen + ':' + yu
+        }
+    },
+    watch: {
+        sw: {
+            immediate: true,
+            handler(value) {
+                if (value) {
+                    this.posx = -value * (this.curpage - 1)
+                    if (value > 1200) {
+                        this.column = 5
+                    } else if (value > 992) {
+                        this.column = 4
+                    } else if (value > 768) {
+                        this.column = 3
+                    } else {
+                        this.column = 2
+                        this.row = 4
+                    }
+                }
+            }
+        },
+        column: {
+            immediate: true,
+            handler(value) {
+                this.chuli('column')
+                this.page = 1
+            }
+        },
+        page: {
+            immediate: true,
+            handler(value) {
+                this.chuli('page')
+            }
+        },
+        curyear: {
+            immediate: true,
+            handler(value) {
+                this.chuli('curyear')
+                this.page = 1
+            }
+        },
+        curpage: {
+            immediate: true,
+            handler(value) {
+                this.posx = -this.sw * (value - 1)
+                this.$nextTick(() => {
+                    if (this.show) {
+                        let target = document.querySelector('.thumbpic')
+                        let curtarget = target.querySelector('.cur')
+                        let liw = curtarget.offsetWidth + 5
+                        let maxw = -(liw * this.config.length - target.offsetWidth)
+                        if (curtarget.offsetLeft + 2 * liw + this.posx1 > target.offsetWidth) {
+                            this.posx1 -= 2 * liw
+                            if (this.posx1 <= maxw) {
+                                this.posx1 = maxw
+                            }
+                        }
+                        if (curtarget.offsetLeft - 2 * liw + this.posx1 < 0) {
+                            this.posx1 += 2 * liw
+                            if (this.posx1 >= 0) {
+                                this.posx1 = 0
+                            }
+                        }
+                        //
+
+                        let slide = document.querySelectorAll('.slide')
+                        slide.forEach((el) => {
+                            let video = el.querySelector('video')
+                            if (video) {
+                                video.pause()
+                            }
+                        })
+                        let video = slide[value - 1].querySelector('video')
+                        if (video) {
+                            video.play()
+                        }
+                    }
+                });
+            }
+        },
+        show: {
+            immediate: true,
+            handler(value) {
+                if (!value) {
+                    this.posx = 0
+                    this.movex = 0
+                    this.posx1 = 0
+                    this.movex1 = 0
+                    this.curpage = 1
+                } else {
+                    this.$nextTick(() => {
+                        let slide = document.querySelectorAll('.slide')
+                        slide.forEach((el) => {
+                            let video = el.querySelector('video')
+                            if (video) {
+                                video.pause()
+                            }
+                        })
+                        let video = slide[value - 1].querySelector('video')
+                        if (video) {
+                            video.play()
+                        }
+                    })
+                }
+            }
+        },
+        xh: {
+            immediate: true,
+            handler(value) {
+                //this.curtime=0
+                //this.temcurtime=0
+                clearInterval(this.setinter)
+                //this.mymusic.pause()
+                setTimeout(() => {
+                    this.canplay = true
+                    this.preloadAudio(this.music[value].url)
+                }, 10)
+            }
+        },
+        curtime: {
+            immediate: true,
+            handler(value) {
+                this.$nextTick(function () {
+                    if (value == 0) {
+                        this.si1.disabled()
+                    } else {
+                        this.si1.enabled()
+                    }
+                })
+            }
+        }
+    },
+    mounted() {
+        document.addEventListener('mousewheel', (e) => {
+            if (this.show) {
+                if (e.deltaY < 80) {
+                    this.curpage--
+                }
+                if (e.deltaY > 80) {
+                    this.curpage++
+                }
+                if (this.curpage < 1) {
+                    this.curpage = 1
+                }
+                if (this.curpage > this.config.length) {
+                    this.curpage = this.config.length
+                }
+            }
+        })
+        document.addEventListener('keydown', (e) => {
+            if (this.show) {
+                if (e.key === 'Escape') {
+                    this.show = false
+                }
+                if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                    this.curpage--
+                }
+                if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                    this.curpage++
+                }
+                if (this.curpage < 1) {
+                    this.curpage = 1
+                }
+                if (this.curpage > this.config.length) {
+                    this.curpage = this.config.length
+                }
+            }
+        })
+
+        //设置屏幕大小
+        this.sw = window.innerWidth
+        window.addEventListener('resize', () => {
+            this.sw = window.innerWidth
+        })
+        //设置背景
+        let bgimg = new Image()
+        bgimg.src = 'https://picsum.photos/600/300'
+        bgimg.onload = () => {
+            this.bgload = true
+            this.bg = bgimg.src
+        }
+
+
+        //设置albumAll
+        let data = {
+            app_key: '1D5AF16FD7D90EE3C5CF70D088249505',
+            model_name: 'life',
+            perpage: 1000,
+            order: ["mtime DESC", "id DESC"]
+        }
+        axios({
+            method: "post",
+            url: 'https://hn216.api.yesapi.cn/api/App/Table/FreeQuery',
+            data: Qs.stringify(data)
+        }).then((rs) => {
+            this.albumAll = rs.data.data.list
+            let years = []
+            this.albumAll.forEach((el, index) => {
+                years[index] = Number(el.mtime.split('-')[0])
+            })
+            this.years = Array.from(new Set(years))
+            this.chuli('curyear')
+
+        })
+
+
+        //设置动效
+        this.$nextTick(() => {
+            //
+            TweenMax.set(['.time', '.title'],
+                {
+                    y: 100
+                })
+            //
+        });
+        //滑块
+        this.si1 = new Slider(
+            '#jd', {
+                theme: 'green', //red,yellow,black,green,
+                size: 's', //s,m,l
+                initvalue: 0, //初始值
+                showtip: false,
+                slideend: (val, string) => {
+                    if (string == 'end') {
+                        clearInterval(this.setinter)
+                        this.temcurtime = val * this.total / 100
+                        this.chulimusic()
+                    }
+                    if (string == 'move') {
+                        clearInterval(this.setinter)
+                        this.temcurtime = val * this.total / 100
+                        this.curtime = val * this.total / 100
+                        //this.temcurtime = val * this.total / 100
+                        //this.chulimusic()
+                    }
+
+                }
+            });
+    },
+    computed: {},
+    methods: {
+        qiebg() {
+            //设置背景
+            this.bgload = false
+            this.bg = ''
+            let bgimg = new Image()
+            bgimg.src = 'https://picsum.photos/600/300?random=' + Math.random()
+            bgimg.onload = () => {
+                this.bgload = true
+                this.bg = bgimg.src
+            }
+        },
+        curyearlist(el) {
+            this.curyear = el
+        },
+        chuli(from) {
+            if (from === 'curyear' || from === 'page') {
+                TweenMax.set('.pic', {
+                    z: -21200,
+                    rotationY: 0,
+                    opacity: 0
+                })
+            }
+            let num = this.column * this.row
+            //album进行处理
+            let fi = this.albumAll.filter((el) => {
+                if (isNaN(this.curyear)) {
+                    return el.tj === '1'
+                } else {
+                    return el.mtime.indexOf(this.curyear) > -1
+                }
+            })
+            let fii = fi.filter((el, index) => {
+                return index >= (this.page - 1) * num && index < this.page * num
+            })
+            this.album = fii
+            this.totalPage = Math.ceil(fi.length / num)
+            setTimeout(() => {
+                if (from === 'curyear' || from === 'page') {
+                    let t1 = new TimelineMax()
+                    TweenMax.set('.pic', {
+                        z: -21200,
+                        rotationY: 0,
+                        opacity: 0
+                    })
+                    let tw = TweenMax.staggerTo('.pic', 2,
+                        {
+                            z: 0,
+                            rotationY: 360,
+                            opacity: 1
+                        }, .2
+                    );
+                    t1.add(tw)
+                }
+            }, 200)
+        },
+        me() {
+            //
+            let target = event.currentTarget
+            if (target.querySelector('.time')) {
+                let mark = target.querySelector('.mark')
+                let time = target.querySelector('.time')
+                let title = target.querySelector('.title')
+                TweenMax.to([mark, time, title], .5,
+                    {
+                        opacity: 1
+                    })
+                TweenMax.staggerTo([time, title], .5,
+                    {
+                        y: 0
+                    }, .1)
+            }
+
+        },
+        ml() {
+            let target = event.currentTarget
+            if (target.querySelector('.time')) {
+                let mark = target.querySelector('.mark')
+                let time = target.querySelector('.time')
+                let title = target.querySelector('.title')
+                TweenMax.to([mark, time, title], .5,
+                    {
+                        opacity: 0
+                    })
+                TweenMax.staggerTo([time, title], .5,
+                    {
+                        y: 100
+                    }, .1)
+            }
+        },
+        tanWin(id) {
+            this.show = true
+            let fi = this.albumAll.filter((el) => {
+                return el.id === id
+            })
+            this.albumName = fi[0].title
+            let reg = new RegExp('(?<=((video|img)[^>]*src="))[^"]*', 'gi');  //提取IMG
+            this.config = fi[0].nr.match(reg)
+            //event.currentTarget.querySelector('video').play()
+        },
+        gb() {
+            this.show = false
+        },
+        mousedown() {
+            this.isdown = true
+            this.oldx = event.pageX
+        },
+        mousemove() {
+            if (this.isdown) {
+                this.movex = (event.pageX - this.oldx)
+                if (this.curpage === 1) {//如果当前在第一张
+                    if (this.movex > 0) {
+                        this.movex = (event.pageX - this.oldx) * 0.4
+                    }
+                }
+                if (this.curpage === this.config.length) {//如果当前在第一张
+                    if (this.movex < 0) {
+                        this.movex = (event.pageX - this.oldx) * 0.4
+                    }
+                }
+            }
+        },
+        mouseup() {
+            this.isdown = false
+            if (this.movex + this.posx >= 0) {
+                this.curpage = 1
+            } else if (this.movex + this.posx <= -this.sw * (this.config.length - 1)) {
+                this.curpage = this.config.length
+
+            } else {
+                if (this.movex < 0) {//左滑动
+                    if (Math.abs(this.movex) >= this.sw / 6) {//滑动的距离大于1/4的屏幕
+                        this.curpage++
+                    }
+                } else {
+                    if (Math.abs(this.movex) >= this.sw / 6) {//滑动的距离大于1/4的屏幕
+                        this.curpage--
+                    }
+                }
+            }
+            this.movex = 0
+
+        },
+        mouseleave() {
+            this.isdown = false
+            if (this.movex + this.posx >= 0) {
+                this.curpage = 1
+            } else if (this.movex + this.posx <= -this.sw * (this.config.length - 1)) {
+                this.curpage = this.config.length
+
+            } else {
+                if (this.movex < 0) {//左滑动
+                    if (Math.abs(this.movex) >= this.sw / 6) {//滑动的距离大于1/4的屏幕
+                        this.curpage++
+                    }
+                } else {
+                    if (Math.abs(this.movex) >= this.sw / 6) {//滑动的距离大于1/4的屏幕
+                        this.curpage--
+                    }
+                }
+            }
+            this.movex = 0
+
+        },
+        touchstart() {
+            this.isdown = true
+            this.oldx = event.targetTouches[0].pageX
+        },
+        touchmove() {
+            if (this.isdown) {
+                this.movex = (event.targetTouches[0].pageX - this.oldx)
+                if (this.curpage === 1) {//如果当前在第一张
+                    if (this.movex > 0) {
+                        this.movex = (event.targetTouches[0].pageX - this.oldx) * 0.4
+                    }
+                }
+                if (this.curpage === this.config.length) {//如果当前在第一张
+                    if (this.movex < 0) {
+                        this.movex = (event.targetTouches[0].pageX - this.oldx) * 0.4
+                    }
+                }
+            }
+        },
+        touchend() {
+            this.isdown = false
+            if (this.movex + this.posx >= 0) {
+                this.curpage = 1
+            } else if (this.movex + this.posx <= -this.sw * (this.config.length - 1)) {
+                this.curpage = this.config.length
+
+            } else {
+                if (this.movex < 0) {//左滑动
+                    if (Math.abs(this.movex) >= this.sw / 6) {//滑动的距离大于1/4的屏幕
+                        this.curpage++
+                    }
+                } else {
+                    if (Math.abs(this.movex) >= this.sw / 6) {//滑动的距离大于1/4的屏幕
+                        this.curpage--
+                    }
+                }
+            }
+            this.movex = 0
+        },
+        mousedown1() {
+            this.isdown1 = true
+            this.oldx1 = event.pageX
+        },
+        mousemove1() {
+            let liw = event.currentTarget.querySelector('li').scrollWidth
+            let maxw = -((liw + 5) * this.config.length - document.querySelector('.thumbpic').offsetWidth)
+            if (this.isdown1 && maxw < 0) {
+                this.movex1 = (event.pageX - this.oldx1)
+                if (this.movex1 + this.posx1 >= 0) {
+                    this.movex1 = 0
+                    this.posx1 = 0
+                } else if (this.movex1 + this.posx1 <= maxw) {
+                    this.posx1 = maxw
+                    this.movex1 = 0
+                }
+
+            }
+        },
+        mouseup1() {
+            this.isdown1 = false
+            this.posx1 = this.posx1 + this.movex1
+            this.movex1 = 0
+
+        },
+        mouseleave1() {
+            this.isdown1 = false
+            this.posx1 = this.posx1 + this.movex1
+            this.movex1 = 0
+        },
+        touchstart1() {
+            this.isdown1 = true
+            this.oldx1 = event.targetTouches[0].pageX
+        },
+        touchmove1() {
+            let liw = event.currentTarget.querySelector('li').scrollWidth + 1
+            let maxw = -((liw + 5) * this.config.length - document.querySelector('.thumbpic').offsetWidth)
+            if (this.isdown1) {
+                this.movex1 = (event.targetTouches[0].pageX - this.oldx1)
+                if (this.movex1 + this.posx1 >= 0) {
+                    this.movex1 = 0
+                    this.posx1 = 0
+                } else if (this.movex1 + this.posx1 <= maxw) {
+                    this.posx1 = maxw
+                    this.movex1 = 0
+                }
+            }
+        },
+        touchend1() {
+            this.isdown1 = false
+            this.posx1 = this.posx1 + this.movex1
+            this.movex1 = 0
+        },
+        playmucis() {
+            this.first = false
+            this.chulimusic()
+        },
+        pausemucis() {
+            this.play = false
+            this.mymusic.pause()
+            this.temcurtime = this.mymusic.currentTime
+            clearInterval(this.setinter)
+        },
+        prev() {
+            this.first = false
+            this.xh--
+            if (this.xh < 0) {
+                this.xh = this.music.length - 1
+            }
+        },
+        next() {
+            this.first = false
+            this.xh++
+            if (this.xh > this.music.length - 1) {
+                this.xh = 0
+            }
+        },
+        chulimusic() {
+            this.canplay = true
+            this.mymusic.currentTime = this.temcurtime
+            this.curtime = this.mymusic.currentTime
+
+            if (!this.first) {
+                this.play = true
+                this.mymusic.play()
+                this.setinter = setInterval(() => {
+                    this.curtime = this.mymusic.currentTime
+                    var pos = this.curtime / this.total * 100
+                    this.si1.go(pos)
+                    if (this.curtime >= this.total) {
+                        this.next()
+                    }
+                }, 1000)
+            }
+        },
+        preloadAudio(url) {
+            let audio = new Audio();
+            audio.addEventListener('loadedmetadata', () => {
+                this.total = audio.duration
+            }, false);
+            audio.addEventListener('canplaythrough', this.chulimusic, false);
+
+            audio.addEventListener('error', function failed(e) {
+                console.log("COULD NOT LOAD AUDIO");
+            });
+            audio.src = url;
+            audio.load();
+            this.mymusic.src = url
+            this.temcurtime = 0
+            this.mymusic.currentTime = 0
+        }
+    }
+})
+</script>
+
+</body>
+</html>
