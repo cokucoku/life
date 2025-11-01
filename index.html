@@ -20,8 +20,8 @@
     <div class="line"></div>
     <div class="yearList">
       <ul>
-        <li @click="curyearlist('recommend')" :class="{cur:curyear==='recommend'}">推荐</li>
-        <li @click="curyearlist(item)" :class="{cur:item===curyear}" v-for="item in years">{{item}}</li>
+        <li @click="curyearlist('recommend')" :class="{cur:curyear==='recommend'}">推荐<i>{{getNum('recommend')}}</i></li>
+        <li @click="curyearlist(item)" :class="{cur:item===curyear}" v-for="item in years">{{item}}<i>{{getNum(item)}}</i></li>
       </ul>
     </div>
   </div>
@@ -398,6 +398,19 @@ new Vue({
     },
     computed: {},
     methods: {
+      getNum(from){
+
+        let fi = this.albumAll.filter((el) => {
+                if (isNaN(from)) {
+                    return el.tj === '1'
+                } else {
+                    return el.mtime.indexOf(from) > -1
+                }
+            })
+        return fi.length
+
+
+      },
         qiebg() {
             //设置背景
             this.bgload = false

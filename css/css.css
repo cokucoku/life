@@ -67,6 +67,9 @@ body {
 
 .timeLine .yearList ul {
     padding-top: 15px;
+    gap:10px;
+    display: flex;
+    flex-direction: column
 }
 
 .timeLine .yearList ul li {
@@ -76,10 +79,22 @@ body {
     align-items: center;
     cursor: pointer;
     font-size: 14px;
-    padding: 10px 0;
     position: relative;
     transition: all .3s;
     transform-origin: right center;
+}
+.timeLine .yearList ul li i{
+    background: #f60;
+    border-radius: 6px;
+    padding: 2px 5px;
+    color: #fff;
+    font-style: normal;
+    line-height: 12px;
+    font-size: 10px;
+    position: absolute;
+    right: 0;
+    z-index: 3;
+    transform: translateX(50%);
 }
 
 .timeLine .yearList ul li:after {
@@ -505,6 +520,10 @@ body {
     .timeLine .yearList ul li.cur {
         font-size: 14px;
         transform: scale(1);
+    }
+    .timeLine .yearList ul li i{
+        right: 50%;
+        top: 0;
     }
 
     .qieBg {
