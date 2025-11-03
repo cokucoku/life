@@ -67,7 +67,7 @@ body {
 
 .timeLine .yearList ul {
     padding-top: 15px;
-    gap:10px;
+    gap:20px;
     display: flex;
     flex-direction: column
 }
