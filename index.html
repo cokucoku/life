@@ -333,7 +333,7 @@ new Vue({
         })
         //设置背景
         let bgimg = new Image()
-        bgimg.src = 'https://picsum.photos/600/300'
+        bgimg.src = 'https://picsum.photos/1920/920'
         bgimg.onload = () => {
             this.bgload = true
             this.bg = bgimg.src
@@ -416,7 +416,7 @@ new Vue({
             this.bgload = false
             this.bg = ''
             let bgimg = new Image()
-            bgimg.src = 'https://picsum.photos/600/300?random=' + Math.random()
+            bgimg.src = 'https://picsum.photos/1920/920?random=' + Math.random()
             bgimg.onload = () => {
                 this.bgload = true
                 this.bg = bgimg.src

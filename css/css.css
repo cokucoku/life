@@ -37,6 +37,7 @@ body {
     left: 0;
     top: 0;
     transition: all 1.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+    filter: blur(10px);
 }
 
 .photos .bg img {
