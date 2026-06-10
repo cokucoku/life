@@ -20,6 +20,8 @@
         <div class="line"></div>
         <div class="yearList">
             <ul>
+                <li @click="curyearlist('recommend')" :class="{cur:curyear==='recommend'}">
+                    推荐<i>{{getNum('recommend')}}</i></li>
                 <li @click="curyearlist(item)" :class="{cur:item===curyear}" v-for="item in years">{{item}}<i>{{getNum(item)}}</i>
                 </li>
             </ul>
@@ -102,7 +104,6 @@
 <script src="js/axios.min.js"></script>
 <script src="js/music_like.js"></script>
 <script src="js/slider.js"></script>
-<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script src="https://cdn.bootcss.com/qs/6.7.0/qs.min.js"></script>
 <script>
     new Vue({
@@ -126,7 +127,7 @@
             oldx: 0,
             curpage: 1,//滑动到第几张
             years: [],
-            curyear: new Date().getFullYear(),
+            curyear: 'recommend',
             posx1: 0,
             movex1: 0,
             isdown1: false,
@@ -141,8 +142,8 @@
             setinter: '', //保存定時器名稱
             si1: '',
             first: true,//这个用来标记是不是第一次页面加载，这样来判断音乐是不是可
-            canplay: false,
-            base: null,
+            canplay: false
+
         },
         filters: {
             ge: function (value) {
@@ -343,10 +344,26 @@
 
 
             //设置albumAll
+            let data = {
+                app_key: '1D5AF16FD7D90EE3C5CF70D088249505',
+                model_name: 'life',
+                perpage: 1000,
+                order: ["mtime DESC", "id DESC"]
+            }
+            axios({
+                method: "post",
+                url: 'https://hn216.api.yesapi.cn/api/App/Table/FreeQuery?yesapi_allow_origin=1',
+                data: Qs.stringify(data)
+            }).then((rs) => {
+                this.albumAll = rs.data.data.list
+                let years = []
+                this.albumAll.forEach((el, index) => {
+                    years[index] = Number(el.mtime.split('-')[0])
+                })
+                this.years = Array.from(new Set(years))
+                this.chuli('curyear')
 
-            this.getBase()
-            this.getData()
-
+            })
 
 
             //设置动效
@@ -384,22 +401,6 @@
         },
         computed: {},
         methods: {
-            async getBase() {
-                const {createClient} = supabase
-                this.base = createClient('https://pmfxqcqvqrhxnxyotyzp.supabase.co', 'sb_publishable_T98PsjOazNXjyak2nXPwDg_ox52NaWg')
-            },
-            async getData() {
-                const {data} = await this.base.from('life').select().order('mtime', {ascending: false})
-                this.albumAll = data
-                let years = []
-                this.albumAll.forEach((el, index) => {
-                    years[index] = Number(el.mtime.split('-')[0])
-                })
-                this.years = Array.from(new Set(years))
-                this.chuli('curyear')
-
-
-            },
             getNum(from) {
 
                 let fi = this.albumAll.filter((el) => {
