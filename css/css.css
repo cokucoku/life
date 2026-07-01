@@ -588,6 +588,7 @@ body {
         width: 100%;
         overflow-x: auto;
         white-space: nowrap;
+        flex-direction: row;
     }
 
     .timeLine .yearList ul::-webkit-scrollbar {
